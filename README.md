@@ -1,10 +1,9 @@
 ## 1_populate_tsv.py
 Used to generate [ENA Tree of Life sample submisison checklist](https://www.ebi.ac.uk/ena/browser/view/ERC000053) to create sample accession numbers. Takes relevant fields from [sample_metadata.csv](https://github.com/bge-barcoding/sample-processing?tab=readme-ov-file#1_sample_processingpy) and outputs them in ToL checklist format for manual upload to ENA.
 
-**usage: python 1_populate_tsv.py [/path/to/sample2taxid_out.csv] [/path/to/output.tsv]**
+**usage: python 1_populate_tsv.py [/path/to/sample_metadata.csv] [/path/to/tol_ena_checklist.tsv**
 - sample_metadata.csv = Generated during sample-processing from BOLD container dowload.
-- output.tsv =  Contains following fields: 'taxid', 'scientific_name', 'sample_alias', 'sample_title', 'sample_description', 'organism part', 'lifestage', 'project name', 'identified_by', 'collected_by', 'collection date', 'geographic location (country and/or eea)',
-'geographic location (latitude)', 'geographic location (longitude)', 'geographic location (region and locality)', 'habitat', 'sex', 'collecting institution', 'specimen_voucher'
+- tol_ena_checklist.tsv =  Contains following fields: 'taxid', 'scientific_name', 'sample_alias', 'sample_title', 'sample_description', 'organism part', 'lifestage', 'project name', 'identified_by', 'collected_by', 'collection date', 'geographic location (country and/or sea)', 'geographic location (latitude)', 'geographic location (longitude)', 'geographic location (region and locality)', 'habitat', 'sex', 'collecting institution', 'specimen_voucher'.
 
 See 'BOLD_download-ENA_ToL_checklist_field_mapping.xlsx' for information on how fields from BOLD container downloads are used to populate required fields in ENA's Tree of Life sample registration checklist.
 
