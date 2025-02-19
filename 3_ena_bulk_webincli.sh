@@ -25,9 +25,9 @@ conda activate bulk_webin
 
 
 #PATHS
-ENA_BULK_WEBINCLI=/gpfs/nhmfsa/bulk/share/data/mbl/share/workspaces/groups/genomics-collections/software/ena-bulk-webincli
+ENA_BULK_WEBINCLI=/path/to/ena-bulk-webincli
 
-INPUT_SHEET=/gpfs/nhmfsa/bulk/share/data/mbl/share/workspaces/groups/genomics-collections/BGE/BGE_scripts/ena_upload/Create_ena_submission_sheet-OUT.tsv
+INPUT_SHEET=path/to/Create_ena_submission_sheet-OUTPUT.tsv
 
 
 
