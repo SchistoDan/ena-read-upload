@@ -1,5 +1,5 @@
 ## 1_populate_tsv.py
-Used to generate [ENA Tree of Life sample submisison checklist](https://www.ebi.ac.uk/ena/browser/view/ERC000053) to create sample accession numbers. Takes relevant fields from [sample_metadata.csv](https://github.com/bge-barcoding/sample-processing?tab=readme-ov-file#1_sample_processingpy) and outputs them in ToL checklist format for manual upload to ENA.
+Used to create [ENA Tree of Life sample submisison checklist](https://www.ebi.ac.uk/ena/browser/view/ERC000053) to generate sample accession numbers. Takes relevant fields from [sample_metadata.csv](https://github.com/bge-barcoding/sample-processing?tab=readme-ov-file#1_sample_processingpy) and outputs them in ToL checklist format for manual upload to ENA.
 
 **Usage:**
 ```bash
@@ -7,7 +7,26 @@ python3 1_generate_ena_tol_checklist.py -i/--input [/path/to/sample_metadata.csv
 ```
 
 - sample_metadata.csv = Generated during [sample-processing](https://github.com/bge-barcoding/sample-processing?tab=readme-ov-file#1_sample_processingpy) from BOLD container dowload.
-- tol_ena_checklist.tsv =  Contains the following fields: 'taxid', 'scientific_name', 'sample_alias', 'sample_title', 'sample_description', 'organism part', 'lifestage', 'project name', 'identified_by', 'collected_by', 'collection date', 'geographic location (country and/or sea)', 'geographic location (latitude)', 'geographic location (longitude)', 'geographic location (region and locality)', 'habitat', 'sex', 'collecting institution', 'specimen_voucher'.
+- tol_ena_checklist.tsv =  Contains the following fields (field name in sample_metadata.csv):
+  - 'taxid' (empty at point of creation)
+  - 'scientific_name' (species name, or genus name + 'sp.' if species name not available)
+  - 'sample_alias' (BOLD Process ID: [Process ID])
+  - 'sample_title' (Process ID)
+  - 'sample_description' ('Museum voucher specimen)
+  - 'organism part' (organism part)
+  - 'lifestage' (lifestage)
+  - 'project name' ('Biodiversity Genomics Europe')
+  - 'identified_by' (identified_by)
+  - 'collected_by' (collected_by_
+  - 'collection date' (collection_date_
+  - 'geographic location (country and/or sea)' (geographic_location)
+  - 'geographic location (latitude)' (latitude)
+  - 'geographic location (longitude)' (longitude)
+  - 'geographic location (region and locality)' (geographic_location_locality)
+  - 'habitat' (habitat)
+  - 'sex' (sex)
+  - 'collecting institution' (collecting_institution)
+  - 'specimen_voucher' (specimen_voucher)
 
 See 'BOLD_download-ENA_ToL_checklist_field_mapping.xlsx' for information on how fields from BOLD container downloads are used to populate required fields in ENA's Tree of Life sample registration checklist.
 
