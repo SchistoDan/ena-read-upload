@@ -1,4 +1,4 @@
-## 1_populate_tsv.py
+## 1_generate_ena_tol_checklist.py
 Used to create [ENA Tree of Life sample submisison checklist](https://www.ebi.ac.uk/ena/browser/view/ERC000053) to generate sample accession numbers. Takes relevant fields from [sample_metadata.csv](https://github.com/bge-barcoding/sample-processing?tab=readme-ov-file#1_sample_processingpy) and outputs them in ToL checklist format for manual upload to ENA.
 
 **Usage:**
