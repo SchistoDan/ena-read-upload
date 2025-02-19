@@ -4,12 +4,15 @@ ENA Sample Sheet Generator for Tree of Life Project
 
 This script converts input CSV files containing specimen data into properly formatted TSV files
 that comply with the European Nucleotide Archive (ENA) sample checklist format (ERC000053).
+It only processes entries that have corresponding sequencing files in the specified directory.
 
 The script handles the following operations:
 1. Reads specimen data from an input CSV file
-2. Transforms the data to match ENA's required format
-3. Adds necessary headers and unit specifications
-4. Writes the formatted data to a tab-separated (TSV) output file
+2. Checks for matching sequencing files in the specified directory
+3. Transforms the data to match ENA's required format
+4. Adds necessary headers and unit specifications
+5. Writes the formatted data to a tab-separated (TSV) output file
+6. Generates a detailed log file of the processing
 
 Required Input CSV Fields:
 - species: Scientific name of the specimen
@@ -37,14 +40,12 @@ Output TSV Format:
 - Handles missing data with 'not collected' placeholder
 
 Usage:
-    python populate_tsv.py -i path/to/input.csv -o path/to/output.tsv
+    python 1_generate_ena_tol_checklist.py -i path/to/input.csv -d path/to/seq/files/dir -o path/to/output.tsv
 
 Arguments:
-    -i, --input: Path to input CSV file (sample2taxid_out.csv)
+    -i, --input: Path to input CSV file (sample_metadata.csv)
+    -d, --directory: Path to directory containing sequencing files
     -o, --output: Path to output TSV file (Tree of Life ENA checklist)
-
-Example:
-    python 1_generate_ena_tol_checklist.py -i sample_metadata.csv -o ena_checklist.tsv
 
 Notes:
     - The script assumes input CSV uses ',' as delimiter
@@ -65,8 +66,65 @@ import csv
 import sys
 import argparse
 from pathlib import Path
+import re
+import logging
+from datetime import datetime
 
-def populate_ena_sample_sheet(input_file, output_file):
+def setup_logging(output_dir):
+    # Create log filename based on timestamp
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    log_file = output_dir / f'ena_tol_checklist_generator_{timestamp}.log'
+    
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler()
+        ]
+    )
+    
+    return log_file
+
+def get_process_ids_from_directory(directory_path):
+    process_ids = set()
+    pattern = r'([A-Z0-9]+-\d+)'  # Updated pattern to include numbers in the prefix
+    
+    # Log the directory contents first
+    logging.info(f"Scanning directory: {directory_path}")
+    files = list(directory_path.glob('*'))
+    logging.info(f"Total files found in directory: {len(files)}")
+    
+    # Log first few files to see what we're working with
+    for file_path in files[:5]:
+        logging.info(f"Example file: {file_path.name}")
+    
+    for file_path in directory_path.glob('*'):
+        filename = file_path.name
+        match = re.search(pattern, filename)
+        
+        # Debug output for pattern matching
+        logging.debug(f"Processing file: {filename}")
+        if match:
+            process_id = match.group(1)
+            # Print the exact match we found
+            logging.info(f"Found match: '{process_id}' in file: {filename}")
+            process_ids.add(process_id)
+    
+    logging.info(f"Found {len(process_ids)} unique Process IDs in directory")
+    if process_ids:
+        logging.info("Process IDs found:")
+        for pid in sorted(process_ids):
+            logging.info(f"- {pid}")
+    else:
+        logging.warning("No Process IDs found in any files!")
+    
+    return process_ids
+
+def populate_ena_sample_sheet(input_file, directory_path, output_file):
+    # Get Process IDs from directory
+    valid_process_ids = get_process_ids_from_directory(Path(directory_path))
+    
     fieldnames = [
         'taxid', 'scientific_name', 'sample_alias', 'sample_title', 'sample_description',
         'organism part', 'lifestage', 'project name', 'identified_by', 'collected_by', 
@@ -76,12 +134,16 @@ def populate_ena_sample_sheet(input_file, output_file):
         'collecting institution', 'specimen_voucher'
     ]
 
+    processed_ids = []
+    skipped_ids = []
+
     with open(input_file, mode='r') as infile:
         reader = csv.DictReader(infile)
         
         with open(output_file, mode='w', newline='') as outfile:
             writer = csv.writer(outfile, delimiter='\t')
 
+            # Write header rows
             writer.writerow(['Checklist', 'ERC000053', 'Tree of Life Checklist'])
             writer.writerow(fieldnames)
             units_row = ['#units'] + [''] * 11 + ['DD', 'DD'] + [''] * 6
@@ -90,6 +152,13 @@ def populate_ena_sample_sheet(input_file, output_file):
             dict_writer = csv.DictWriter(outfile, fieldnames=fieldnames, delimiter='\t')
 
             for row in reader:
+                process_id = row.get('Process ID', '').strip()
+                
+                # Skip if Process ID doesn't match any files in directory
+                if process_id not in valid_process_ids:
+                    skipped_ids.append(process_id)
+                    continue
+                
                 # Handle scientific name based on species and genus information
                 species_value = row.get('species', 'not collected')
                 if species_value == 'not collected' and row.get('genus'):
@@ -97,11 +166,12 @@ def populate_ena_sample_sheet(input_file, output_file):
                 else:
                     scientific_name = species_value
 
+                # Set output file column headers
                 output_row = {
                     'taxid': '',
                     'scientific_name': scientific_name,
-                    'sample_alias': f'BOLD Process ID: {row.get("Process ID", "not collected")}',
-                    'sample_title': row.get('Process ID', 'not collected'),
+                    'sample_alias': f'BOLD Process ID: {process_id}',
+                    'sample_title': process_id,
                     'sample_description': 'Museum voucher specimen',
                     'organism part': row.get('organism_part', 'not collected') if row.get('organism_part') else 'not collected',
                     'lifestage': row.get('lifestage', 'not collected') if row.get('lifestage') else 'not collected',
@@ -120,8 +190,25 @@ def populate_ena_sample_sheet(input_file, output_file):
                 }
 
                 dict_writer.writerow(output_row)
+                processed_ids.append(process_id)
 
-    print(f"Data has been processed and written to {output_file}.")
+    # Log processing summary
+    logging.info("Processing Summary:")
+    logging.info(f"Total entries processed: {len(processed_ids)}")
+    logging.info(f"Total entries skipped: {len(skipped_ids)}")
+    
+    # Log processed IDs
+    logging.info("\nProcessed Process IDs:")
+    for pid in sorted(processed_ids):
+        logging.info(f"- {pid}")
+    
+    # Log skipped IDs if any
+    if skipped_ids:
+        logging.info("\nSkipped Process IDs (no matching files found):")
+        for pid in sorted(skipped_ids):
+            logging.info(f"- {pid}")
+    
+    logging.info(f"\nOutput written to: {output_file}")
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
@@ -132,7 +219,13 @@ def parse_arguments():
     parser.add_argument(
         '-i', '--input',
         required=True,
-        help='Path to input CSV file (sample2taxid_out.csv)'
+        help='Path to input CSV file (sample_metadata.csv)'
+    )
+    
+    parser.add_argument(
+        '-d', '--directory',
+        required=True,
+        help='Path to directory containing sequencing files'
     )
     
     parser.add_argument(
@@ -143,12 +236,37 @@ def parse_arguments():
     
     return parser.parse_args()
 
-
 if __name__ == "__main__":
     args = parse_arguments()
     
-    if not Path(args.input).exists():
+    # Convert paths to Path objects
+    input_path = Path(args.input)
+    directory_path = Path(args.directory)
+    output_path = Path(args.output)
+    
+    # Validate input file exists
+    if not input_path.exists():
         print(f"Error: The input file {args.input} does not exist.")
         sys.exit(1)
     
-    populate_ena_sample_sheet(args.input, args.output)
+    # Validate directory exists
+    if not directory_path.exists():
+        print(f"Error: The directory {args.directory} does not exist.")
+        sys.exit(1)
+    
+    # Validate directory is actually a directory
+    if not directory_path.is_dir():
+        print(f"Error: {args.directory} is not a directory.")
+        sys.exit(1)
+    
+    # Setup logging (log file will be in same directory as output file)
+    log_file = setup_logging(output_path.parent)
+    logging.info(f"Starting ENA Sample Sheet Generator")
+    logging.info(f"Input file: {input_path}")
+    logging.info(f"Directory: {directory_path}")
+    logging.info(f"Output file: {output_path}")
+    
+    # Process the files
+    populate_ena_sample_sheet(input_path, directory_path, output_path)
+    
+    logging.info(f"Log file written to: {log_file}")
