@@ -3,7 +3,7 @@ Used to generate [ENA Tree of Life sample submisison checklist](https://www.ebi.
 
 **Usage:**
 ```bash
-python 1_populate_tsv.py [/path/to/sample_metadata.csv] [/path/to/tol_ena_checklist.tsv]
+python3 1_generate_ena_tol_checklist.py -i/--input [/path/to/sample_metadata.csv] -o/--output [/path/to/tol_ena_checklist.tsv]
 ```
 
 - sample_metadata.csv = Generated during [sample-processing](https://github.com/bge-barcoding/sample-processing?tab=readme-ov-file#1_sample_processingpy) from BOLD container dowload.
