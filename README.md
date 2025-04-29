@@ -3,6 +3,13 @@ Used to create [ENA Tree of Life sample submisison checklist](https://www.ebi.ac
 
 **Usage:**
 See 'BOLD_download-ENA_ToL_checklist_field_mapping.xlsx' for information on how fields from BOLD container downloads are used to populate required fields in ENA's Tree of Life sample registration checklist.
+The script handles the following operations:
+1. Reads specimen data from an input CSV file
+2. Checks for matching sequencing files in the specified directory
+3. Transforms the data to match ENA's required format
+4. Adds necessary headers and unit specifications
+5. Writes the formatted data to a tab-separated (TSV) output file
+6. Generates a detailed log file of the processing
 ```bash
 python3 1_generate_ena_tol_checklist.py -i/--input [/path/to/sample_metadata.csv] -d/--directory [path/to/trimmed/reads/dir] -o/--output [/path/to/tol_ena_checklist.tsv]
 ```
